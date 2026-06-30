@@ -103,7 +103,51 @@ Tools → Partition Scheme → Minimal SPIFFS (1.9MB APP with OTA / 128KB SPIFFS
 | `BLEDevice` / `BLE2902` | BLE‑пульт и мост VESC Tool |
 | `Preferences` | сохранение настроек в NVS |
 
-> ⚙️ **TFT_eSPI** нужно настроить под CYD (`User_Setup.h`: драйвер `ILI9341`, нужные пины SPI и подсветки). Используйте готовый конфиг для ESP32‑2432S028R.
+### Настройка TFT_eSPI под CYD (обязательно!)
+
+Библиотека `TFT_eSPI` настраивается **один раз** через файл `User_Setup.h`, который лежит в папке самой библиотеки:
+
+```
+Arduino/libraries/TFT_eSPI/User_Setup.h
+```
+
+Открой его и приведи к виду для **ESP32‑2432S028R** (закомментируй чужие драйверы и впиши это):
+
+```cpp
+#define ILI9341_2_DRIVER        // драйвер дисплея CYD (если цвета инвертированы — попробуй ILI9341_DRIVER)
+
+#define TFT_WIDTH  240
+#define TFT_HEIGHT 320
+
+// --- SPI-пины дисплея на плате CYD ---
+#define TFT_MISO 12
+#define TFT_MOSI 13
+#define TFT_SCLK 14
+#define TFT_CS   15
+#define TFT_DC    2
+#define TFT_RST  -1            // RST соединён с EN платы
+#define TFT_BL   21            // подсветка
+#define TFT_BACKLIGHT_ON HIGH
+
+// --- шрифты ---
+#define LOAD_GLCD
+#define LOAD_FONT2
+#define LOAD_FONT4
+#define LOAD_FONT6
+#define LOAD_FONT7
+#define LOAD_FONT8
+#define LOAD_GFXFF
+#define SMOOTH_FONT
+
+#define SPI_FREQUENCY       55000000
+#define SPI_READ_FREQUENCY  20000000
+```
+
+> 📌 **Тач здесь настраивать НЕ нужно.** Резистивный XPT2046 обслуживается отдельной библиотекой `XPT2046_Touchscreen` прямо в скетче (пины `32/39/25/33`), а не через TFT_eSPI — поэтому `TOUCH_CS` в `User_Setup.h` не задаётся.
+>
+> 🎨 Если после прошивки цвета инвертированы или красный/синий перепутаны — поменяй драйвер на `#define ILI9341_DRIVER` (без `_2`).
+
+**Откуда взять эталонный конфиг и схемы пинов:** официальный community‑репозиторий CYD — [github.com/witnessmenow/ESP32-Cheap-Yellow-Display](https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display) (там готовый `User_Setup.h`, схемы пинов и примеры). Это самый надёжный источник правды по железу CYD.
 
 ---
 
@@ -200,7 +244,7 @@ ESP32 прикидывается BLE‑адаптером VESC (Nordic UART Serv
 | Характеристика статуса | `...-0003-...` (read/notify) |
 
 ### 4. OTA — обновление «по воздуху»
-Подключение к домашней Wi‑Fi сети (вводится на экране Wi‑Fi) и прошивка через `ArduinoOTA` (mDNS‑имя `vesc-ota`, порт 3232). Таймаут подключения — 15 с.
+Подключение к домашней Wi‑Fi сети (вводится на экране Wi‑Fi) и прошивка через `ArduinoOTA`. Таймаут подключения — 15 с.
 
 > ℹ️ Wi‑Fi AP (дашборд), BLE‑мост и OTA — взаимоисключающие режимы: при включении одного остальные корректно останавливаются, чтобы хватало памяти.
 
@@ -231,7 +275,7 @@ HOME ─┬─ STATS ─── (рекорды/статистика)
 
 ## 📝 Лицензия
 
-Укажите здесь лицензию проекта (например, MIT).
+Распространяется под лицензией **MIT** — см. файл [`LICENSE`](LICENSE).
 
 ---
 
